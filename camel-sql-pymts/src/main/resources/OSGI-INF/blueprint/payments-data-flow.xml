@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
+           xmlns:camel="http://camel.apache.org/schema/blueprint"
+           xsi:schemaLocation="
+             http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+             ">
+
+  <!-- In this example, the data ource is created during application feature deployment. -->
+  <reference id="myDataSource" interface="javax.sql.DataSource"
+             filter="osgi.jndi.service.name=jdbc/ds-payments" availability="optional">
+  </reference>
+  <!-- NOTE:: When availability="required" feature installation in Karaf will fail
+   because the bundle cannot resolve the following condition:
+   filter:="(&(objectClass=javax.sql.DataSource)(osgi.jndi.service.name=jdbc/ds-payments))
+   A workaround might be to configure and expose the data source from a separate blueprint
+   installed into Karaf in advance. To expose datasource to use by application code
+   (like Camel, Spring, ...) you would need to also add the fragment below. -->
+  <!--
+  <service interface="javax.sql.DataSource" ref="innerDataSource" id="unusedButNecessary">
+    <service-properties>
+      <entry key="osgi.jndi.service.name" value="jdbc/ds-payments"/>
+    </service-properties>
+  </service>
+  -->
+
+  <!-- Bean which creates/destroys the table for this example -->
+  <bean id="initDatabase" class="ld.lab.camel.sql.TableSetupBean" depends-on="myDataSource"
+        init-method="create" destroy-method="destroy">
+    <property name="dataSource" ref="myDataSource" />
+  </bean>
+
+  <!-- Configure the Camel SQL component to use the JDBC data source -->
+  <bean id="sql" class="org.apache.camel.component.sql.SqlComponent">
+    <property name="dataSource" ref="myDataSource"/>
+  </bean>
+
+    <!-- Payment bean is our business logic bean that creates and checks new payments -->
+  <bean id="paymentBean" class="ld.lab.camel.sql.PaymentBean"/>
+
+  <!-- Camel context configured with a number of routes -->
+  <camelContext id="payments-data-flow" xmlns="http://camel.apache.org/schema/blueprint">
+
+    <!-- use Camel property placeholder loaded from the given file -->
+    <propertyPlaceholder id="placeholder" location="classpath:sql.properties"/>
+
+    <!-- route that generate new payments and insert them in the database -->
+    <route id="generatePayment-route">
+      <from uri="timer:foo?period=5000"/>
+      <transform>
+        <method ref="paymentBean" method="generatePayment"/>
+      </transform>
+      <to uri="sql:{{sql.insertPayment}}"/>
+      <log message="Inserted into db new payment #${body[id]}."/>
+    </route>
+
+    <!-- route that processes the payments by picking up new rows from the database
+         and when done processing then update the row to mark it as processed -->
+    <route id="processPayment-route">
+      <from uri="sql:{{sql.selectPayment}}?onConsume={{sql.markPayment}}"/>
+      <to uri="bean:paymentBean?method=checkFraud"/>
+      <log message="Processed one database record; result message: ${body}."/>
+      <to uri="mock:result"/>
+    </route>
+
+  </camelContext>
+</blueprint>
