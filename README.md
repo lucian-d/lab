@@ -1,3 +1,6 @@
+#lab
+# my lab
+
 #camel-sql-pymts example prerequisites:
 - you'll need Apache Maven and Karaf installed 
 - download camel-sql-pymts code locally
