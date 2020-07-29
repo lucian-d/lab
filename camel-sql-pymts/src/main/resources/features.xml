@@ -2,7 +2,7 @@
 <features>
     <repository>mvn:org.apache.camel.karaf/apache-camel/3.4.0/xml/features</repository>
 
-    <feature name="bluesql" version="1.0-SNAPSHOT">
+    <feature name="pymts-dataflow" version="1.0-SNAPSHOT">
 
         <!-- DataSource is automatically published with dataSourceName value below
         as the osgi.jndi.service.name.
