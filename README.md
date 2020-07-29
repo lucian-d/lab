@@ -1,11 +1,8 @@
-#lab
-# my lab
-
-#camel-sql-pymts example prerequisites:
+## camel-sql-pymts example prerequisites:
 - you'll need Apache Maven and Karaf installed 
 - download camel-sql-pymts code locally
 
-#Compile camel-sql-pymts example and install in Maven:
+## Compile camel-sql-pymts example and install in Maven:
 - and open a command promt to directory where pom.xml lives 
 - run mvn clean install
 - wait till the code compiles, unit tests run and artifacts are deployed to you local Maven repository
