@@ -13,17 +13,15 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <camel.version>3.4.0</camel.version>
-    <camel.osgi.export.pkg>org.apache.camel.example.sql.*</camel.osgi.export.pkg>
     <!-- dynamic import for the Derby JDBC driver -->
     <camel.osgi.dynamic>*</camel.osgi.dynamic>
     <camel.osgi.import>org.apache.derby.jdbc,*</camel.osgi.import>
   </properties>
 
+  <!-- Provide Camel library version to be used by the project -->
   <dependencyManagement>
     <dependencies>
-      <!-- Camel BOM -->
+
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-bom</artifactId>
@@ -31,6 +29,7 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+
       <dependency>
          <groupId>org.apache.camel.karaf</groupId>
          <artifactId>camel-karaf-bom</artifactId>
@@ -38,6 +37,7 @@
          <type>pom</type>
          <scope>import</scope>
       </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -57,28 +57,11 @@
       <artifactId>camel-sql</artifactId>
     </dependency>
 
-    <!-- jdbc -->
+    <!-- Derby database and JDBC driver-->
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
       <version>10.14.2.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-dbcp2</artifactId>
-      <version>2.7.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-pool2</artifactId>
-      <version>2.8.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jdbc</artifactId>
-      <version>5.1.14.RELEASE</version>
     </dependency>
 
     <!-- Testing -->
@@ -95,7 +78,7 @@
       <scope>runtime</scope>
     </dependency>
 
-    <!-- OSGI -->
+    <!-- OSGI hooking-->
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.service.component.annotations</artifactId>
@@ -103,13 +86,18 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- for using mvn camel:run -->
+    <dependency>
+      <groupId>org.apache.camel.karaf</groupId>
+      <artifactId>camel-blueprint-main</artifactId>
+    </dependency>
 
   </dependencies>
 
   <build>
     <plugins>
 
-      <!-- compiler plugin -->
+      <!-- to compile the main and test source code  -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -120,6 +108,7 @@
         </configuration>
       </plugin>
 
+      <!-- to handle the copying of project resources to the output directory -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -129,53 +118,7 @@
         </configuration>
       </plugin>
 
-      <!-- to include MANIFEST.MF in the bundle -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
-        </configuration>
-      </plugin>
-
-      <!-- to run the example using mvn camel:run -->
-      <!--
-      <plugin>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-maven-plugin</artifactId>
-        <version>3.4.0</version>
-      </plugin>
-      -->
-
-      <!-- to install routes and dependencies in Karaf using feature:install -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <id>attach-artifacts</id>
-            <phase>package</phase>
-            <goals>
-              <goal>attach-artifact</goal>
-            </goals>
-            <configuration>
-              <artifacts>
-                <artifact>
-                  <file>target/classes/features.xml</file>
-                  <type>xml</type>
-                  <classifier>features</classifier>
-                </artifact>
-              </artifacts>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- to generate the MANIFEST-FILE of the bundle -->
+      <!-- to generate MANIFEST.MF for the bundle -->
       <plugin>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-bundle-plugin</artifactId>
@@ -207,23 +150,49 @@
         </executions>
       </plugin>
 
-      <!-- Alternative way to generate the MANIFEST-FILE of the bundle -->
-      <!--
+      <!-- to provide the capability to build jars and include MANIFEST.MF in the bundle -->
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>4.2.1</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
         <configuration>
-          <instructions>
-            <Import-Package>
-              org.apache.derby*;version="[10,11)",
-              *
-            </Import-Package>
-            <Dynamic-Import-Package>*</Dynamic-Import-Package>
-          </instructions>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
         </configuration>
       </plugin>
-      -->
+
+      <!-- to run the example using mvn camel:run -->
+      <plugin>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-maven-plugin</artifactId>
+        <version>3.4.0</version>
+      </plugin>
+
+      <!-- to attach features.xml to the package, later used by feature:install to deploy in Karaf -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>target/classes/features.xml</file>
+                  <type>xml</type>
+                  <classifier>features</classifier>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
     </plugins>
   </build>
