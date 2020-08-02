@@ -4,9 +4,18 @@
 
     <feature name="pymts-dataflow" version="1.0-SNAPSHOT">
 
+        <!-- Prerequisite to create a Derby data source and expose it via osgi.jndi.service.name -->
+        <feature>jndi</feature>
+        <feature>jdbc</feature>
+        <feature>pax-jdbc-derby</feature>
+
+        <!-- to use Camel compoents and manage routes -->
+        <feature>camel</feature>
+        <feature>camel-blueprint</feature>
+        <feature>camel-sql</feature>
+
         <!-- DataSource is automatically published with dataSourceName value below
-        as the osgi.jndi.service.name.
-        This config section creates \apache-karaf-4.2.8\etc\org.ops4j.datasource-myorders.cfg
+        as the osgi.jndi.service.name. This config section creates \apache-karaf-4.2.8\etc\org.ops4j.datasource-payments.cfg
         -->
         <config name="org.ops4j.datasource-payments">
             osgi.jdbc.driver.name=derby
@@ -15,20 +24,11 @@
         </config>
         <!--
         NOTE:: When Karaf is first started, Java classes may not find this data source by JNDI name/other means
-        and the bundle may be in a 'failed' state. Restarting the bundle will work around this issue.
+        and the bundle may be in a 'failed' state.
+        Restart the bundle to work around this issue.
         -->
 
-        <feature>transaction</feature>
-        <feature>jndi</feature>
-        <feature>jdbc</feature>
-        <feature>pax-jdbc-pool-dbcp2</feature>
-        <feature>pax-jdbc-config</feature>
-        <feature>pax-jdbc-derby</feature>
-
-        <feature>camel</feature>
-        <feature>camel-blueprint</feature>
-        <feature>camel-sql</feature>
-
+        <!-- Actual OSGI blueprint and Java beans provided by this example -->
         <bundle>mvn:ld.lab.camel.sql/pymts-dataflow/1.0-SNAPSHOT</bundle>
 
     </feature>
