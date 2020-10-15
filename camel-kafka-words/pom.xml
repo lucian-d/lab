@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ld.lab.camel.kafka</groupId>
+  <artifactId>camel-kafka-words</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>Kafka 1-producer/n-consumers using Camel</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <log4j2-version>2.13.3</log4j2-version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Camel BOM -->
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-bom</artifactId>
+        <version>3.4.4</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+
+    <!-- Camel -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-main</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-sql</artifactId>
+    </dependency>	
+	
+    <!-- microsoft.sqlserver/mssql-jdbc -->
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+      <!--<version>8.4.1.jre8</version>-->
+      <version>8.4.1.jre11</version>
+    </dependency>
+    <!-- microsoft.sqlserver/mssql-jdbc_auth
+    Copy mssql-jdbc_auth-8.4.1.x64.dll to  C:\Program Files\AdoptOpenJDK\jdk8u265-b01\jre\bin
+    or to C:\Program Files\AdoptOpenJDK\openjdk-11.0.8_10\bin -->
+
+    <!-- logging -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>runtime</scope>
+      <version>${log4j2-version}</version>
+    </dependency>
+
+    <!-- testing -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  
+  <profiles>
+    <!-- to produce messages to Kafka run `mvn compile exec:java -P producer` -->
+    <profile>
+      <id>producer</id>
+      <properties>
+        <target.main.class>ld.lab.camel.kafka.producer.WordGenApp</target.main.class>
+      </properties>
+    </profile>
+
+    <!-- to consume messages from Kafka run `mvn compile exec:java -P foo` -->
+    <profile>
+      <id>foo</id>
+      <properties>
+        <target.main.class>ld.lab.camel.kafka.consumer.FooApp</target.main.class>
+      </properties>
+    </profile>
+
+    <!-- to consume messages from Kafka run `mvn compile exec:java -P bar` -->
+    <profile>
+      <id>bar</id>
+      <properties>
+        <target.main.class>ld.lab.camel.kafka.consumer.BarApp</target.main.class>
+      </properties>
+    </profile>
+  </profiles>   
+
+  <build>
+    <defaultGoal>install</defaultGoal>
+
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+
+      <!-- Allows the example to be run via 'mvn exec:java' -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <configuration>
+          <mainClass>${target.main.class}</mainClass>
+          <includePluginDependencies>false</includePluginDependencies>
+          <commandlineArgs>${target.cmd.args}</commandlineArgs>
+        </configuration>
+      </plugin>
+
+      <!-- Allows the example to be run via 'mvn camel:run' -->
+      <plugin>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-maven-plugin</artifactId>
+        <version>3.4.4</version>
+        <configuration>
+          <logClasspath>true</logClasspath>
+          <mainClass>ld.lab.camel.kafka.producer.WordGenApp</mainClass>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
