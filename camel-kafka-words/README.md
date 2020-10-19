@@ -3,6 +3,10 @@ The application has two parts
 - A producer which sends #uid*word@timestamp formatted events to a Kafka topic
 - A consumer which receives the messages from the Kafka topic and updates a Microsoft SQL Server table
 
+For an overview of the topics covered by this example, you can read the article below:
+
+    https://medium.com/@lucian.davitoiu/building-a-scalable-exactly-once-data-pipeline-with-kafka-and-camel-550edfd75118
+
 #### Preparing Kafka broker
 
 From Apache Kafka (http://kafka.apache.org/quickstart) you download Kafka and follow the instructions to run Kafka.
