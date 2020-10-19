@@ -103,7 +103,6 @@ public class KafkaRcvRoute extends RouteBuilder {
                         " got word ${body}; topic ${headers[kafka.TOPIC]}; prt# ${headers[kafka.PARTITION]};"
                         + " offset ${headers[kafka.OFFSET]}; key ${headers[kafka.KEY]}; UID ${headers[eventUID]};"
                         + " LRBC ${headers[kafka.LAST_RECORD_BEFORE_COMMIT]}; LPR ${headers[kafka.LAST_POLL_RECORD]}; PiB ${headers[PiB]};" )
-                //.log("Executing UpsertEvent stored proc with eventUID=${headers[eventUID]} & word=${headers[word]}")
                 .to("mssql-sp:[dbo].[UpsertEvent](VARCHAR ${headers[eventUID]}, VARCHAR ${headers[word]}, "
                         +"VARCHAR ${headers[consumer]}, VARCHAR ${headers[kafka.PARTITION]}, "
                         +"VARCHAR ${headers[kafka.OFFSET]}, VARCHAR ${headers[producedAt]})")
@@ -125,7 +124,6 @@ public class KafkaRcvRoute extends RouteBuilder {
                         KafkaManualCommit manual =
                                 exchange.getIn().getHeader(KafkaConstants.MANUAL_COMMIT, KafkaManualCommit.class);
                         if (manual != null) {
-                            //System.out.println("manually committing the offset for batch");
                             manual.commitSync();
                         }
                     }
