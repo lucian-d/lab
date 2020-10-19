@@ -8,9 +8,6 @@ import org.apache.camel.component.kafka.KafkaConfiguration;
 import org.apache.camel.component.kafka.KafkaConstants;
 import org.apache.camel.component.kafka.KafkaManualCommit;
 import org.apache.camel.component.sql.stored.SqlStoredComponent;
-//import org.graalvm.compiler.word.Word;
-
-import java.util.Random;
 
 public class KafkaRcvRoute extends RouteBuilder {
 
@@ -21,12 +18,6 @@ public class KafkaRcvRoute extends RouteBuilder {
 
     public KafkaRcvRoute(String name) {
         _name = name;
-    }
-
-    public int key() {
-        int ran = new Random().nextInt(2);
-        return ran;
-        //return String.valueOf(ran);
     }
 
     @Override
@@ -40,7 +31,6 @@ public class KafkaRcvRoute extends RouteBuilder {
         var config = new KafkaConfiguration();
         config.setBrokers("localhost:9092");
         kafka.setConfiguration(config);
-        //kafka.setBrokers("localhost:9092");
 
         // add component to CamelContext
         getContext().addComponent("kafka", kafka);
@@ -48,21 +38,19 @@ public class KafkaRcvRoute extends RouteBuilder {
         // configure SqlStored component to use our MS SQL server database
         SqlStoredComponent sqlStoredProc = new SqlStoredComponent();
         // prepare a JDBC data source
-        // Server=localhost\SQLEXPRESS01;Database=master;Trusted_Connection=True;
         SQLServerDataSource ds = new SQLServerDataSource();
         ds.setServerName("localhost");
         ds.setInstanceName("SQLEXPRESS01");
         ds.setDatabaseName("mydb");
-        //ds.setSSLProtocol("TLSv1.2");
         // For line below to work
-        // mssql-jdbc_auth-8.4.1.x64.dll must be present in  C:\Program Files\AdoptOpenJDK\jdk8u265-b01\jre\bin
+        // mssql-jdbc_auth-8.4.1.x64.dll must be present in  C:\Program Files\AdoptOpenJDK\jdk<vers>>\bin
         ds.setIntegratedSecurity(true);
+
         // reference data source from Camel
         sqlStoredProc.setDataSource(ds);
         getContext().addComponent("mssql-sp", sqlStoredProc);
 
-        ConsumeWithAtLeastOnceAndManualCommit();
-        //TestUpsertEventSqlProc();
+        ConsumeWithIdempotentDbOpAndManualCommit();
     }
 
 
@@ -92,7 +80,7 @@ public class KafkaRcvRoute extends RouteBuilder {
     KafkaConstants.LAST_POLL_RECORD:            Indicates the last record within the current poll request
                                                 (only available if autoCommitEnable endpoint parameter is false or allowManualCommit is true)
     */
-    private void ConsumeWithAtLeastOnceAndManualCommit() {
+    private void ConsumeWithIdempotentDbOpAndManualCommit() {
         from("kafka:words2?groupId=mygroup&maxPollRecords=50&autoOffsetReset=earliest&autoCommitEnable=false&allowManualCommit=true&breakOnFirstError=true")
                 .routeId(_name)
                 .process(exchange -> {
@@ -140,39 +128,6 @@ public class KafkaRcvRoute extends RouteBuilder {
                             //System.out.println("manually committing the offset for batch");
                             manual.commitSync();
                         }
-                    }
-                });
-    }
-
-    private void TestUpsertEventSqlProc() {
-        from("timer://foo?fixedRate=true&period=5000")//every 5 secs
-                .process(e -> {e.getIn().setHeader("eventUID", 12); e.getIn().setHeader("word", "camel");})
-                .log("Executing UpsertEvent stored proc with eventUID=${headers[eventUID]} & word=${headers[word]}")
-                .to("mssql-sp:[dbo].[UpsertEvent](VARCHAR ${headers[eventUID]}, VARCHAR ${headers[word]})");
-    }
-
-    // Exactly once delivery, i.e. offset control on consumer side implies:
-    // a) consumer stores current kafka topic offset in db, and
-    // b) before fetching events, consumer seeks topic position to current offset; unclear if Camel supports it;
-    // this option has been dropped in favour of "at least once delivery" with idempotent db operation.
-    private void ConsumeWithOffsetCtrl() {
-        // use a timer to trigger every 100 milli seconds and generate a random word
-        // which is sent to kafka
-        from("kafka:words2?groupId=mygroup&maxPollRecords=3&autoOffsetReset=earliest&autoCommitEnable=false&allowManualCommit=true&breakOnFirstError=true")
-                .routeId("Foo [Java DSL]")
-                .log("Got word ${body}; topic ${headers[kafka.TOPIC]}; partition ${headers[kafka.PARTITION]}; offset ${headers[kafka.OFFSET]}; key ${headers[kafka.KEY]}")
-                .process(exchange -> {
-                    // set headers[myEventUID]
-                    System.out.println("processing exchange# " + exchange.getExchangeId());
-                })
-                .to("file:out")
-                .process(exchange -> {
-                    // manually commit offset if it is last message in batch
-                    KafkaManualCommit manual =
-                            exchange.getIn().getHeader(KafkaConstants.MANUAL_COMMIT, KafkaManualCommit.class);
-                    if (manual != null) {
-                        System.out.println("manually committing the offset for batch");
-                        manual.commitSync();
                     }
                 });
     }

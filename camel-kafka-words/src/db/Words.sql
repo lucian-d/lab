@@ -1,9 +1,11 @@
-use mydb;
+CREATE DATABASE mydb
+GO
 
+USE mydb;
 DROP TABLE [dbo].[Words]
 GO
 
-create table Words 
+CREATE TABLE Words
 (
     EventUID int,
     Word char(100),
