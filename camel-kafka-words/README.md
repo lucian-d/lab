@@ -29,7 +29,7 @@ To spread the consumer load across a number of processes in a consumer group, th
 
 ### Preparing Microsoft SQL Server
 
-If you don'f already have an SQL Server installation, you can downlood 2019 Developer 
+If you don't already have an SQL Server installation, you can download 2019 Developer 
 or Express editions for free from https://www.microsoft.com/en-gb/sql-server/sql-server-downloads. In addition, 
 you'll need a database query tool. I've used Visual Studio code which is also free and has got an SQL Server extension.
 
