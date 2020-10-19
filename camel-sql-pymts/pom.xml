@@ -18,7 +18,8 @@
     <camel.osgi.import>org.apache.derby.jdbc,*</camel.osgi.import>
   </properties>
 
-  <!-- Provide Camel library version to be used by the project -->
+  <!-- Control which version of referenced libraries are used
+  [when, or if, they are ever referenced]. -->
   <dependencyManagement>
     <dependencies>
 

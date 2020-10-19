@@ -27,7 +27,7 @@ To spread the consumer load across a number of processes in a consumer group, th
     .\kafka-topics.bat --describe --topic words2  --bootstrap-server localhost:9092
 	.\kafka-run-class.bat kafka.tools.GetOffsetShell --broker-list localhost:9092 --topic words2 --time -1	
 
-### Preparing Microsoft SQL Server
+#### Preparing Microsoft SQL Server
 
 If you don't already have an SQL Server installation, you can download 2019 Developer 
 or Express editions for free from https://www.microsoft.com/en-gb/sql-server/sql-server-downloads. In addition, 
@@ -45,32 +45,32 @@ Once  you got an SQL Server instance installed on you machine use the SQL files 
     src\db\Words.sql
 	src\db\UpsertEvent.sql
        
-### Running the producer
+#### Running the producer
 
 When Kafka is up and running you can start the producer which sends messages to Kafka
 
     mvn compile exec:java -P producer
     
-### Running the consumer
+#### Running the consumer
 
 In another shell you can run the foo consumer which will receive the messages that the producer sends
 
     mvn compile exec:java -P foo
    
-### Kill a consumer
+#### Kill a consumer
 
 In order to simulate a node down failure scenario you can use the commands below.
 
     jps -m
     taskkill /PID <id-from-above> /F
 
-### Failover the consumer
+#### Failover the consumer
 
 You can scale up the consumers by starting a new consumer from a shell
 
     mvn compile exec:java -P bar
 	
-### Check db
+#### Check db
 
 You can visualize the events through the data pipeline and check throughput/latency from producer to database using the following SQL file:
 
