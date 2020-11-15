@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint default-activation="lazy"
+           xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+           xmlns:camel="http://camel.apache.org/schema/blueprint"
+           xsi:schemaLocation="
+        http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint/cxf http://camel.apache.org/schema/cxf/camel-cxf-blueprint.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+<bean id="producerRoute" class="ld.lab.camel.kafka.producer.WordRoute"/>
+<bean id="consumerRoute" class="ld.lab.camel.kafka.consumer.KafkaRcvRoute">
+    <argument value="primary-kafka-to-sql"/>
+</bean>
+
+<camelContext id="bp-event-generator" xmlns="http://camel.apache.org/schema/blueprint">
+    <!-- route that generate new events and publishes them to Kafka topic -->
+    <routeBuilder ref="producerRoute" id="words-bean-to-kafka"/>
+</camelContext>
+
+<camelContext id="bp-primary-consumer" xmlns="http://camel.apache.org/schema/blueprint">
+    <!-- route that subscribes to Kafka topic -->
+    <routeBuilder ref="consumerRoute" />
+</camelContext>
+
+</blueprint>
