@@ -9,12 +9,13 @@
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
 
-  <name>Kafka 1-producer/n-consumers using Camel</name>
+  <name>Kafka to Sql Camel Routes in Karaf</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <log4j2-version>2.13.3</log4j2-version>
+    <camel.version>3.4.4</camel.version>
   </properties>
 
   <dependencyManagement>
@@ -52,24 +53,32 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-sql</artifactId>
-    </dependency>	
-	
-    <!-- microsoft.sqlserver/mssql-jdbc -->
+    </dependency>
+
+    <!-- Sql Server  -->
+    <!-- TO run app, copy mssql-jdbc_auth-8.4.1.x64.dll
+    to C:\Program Files\AdoptOpenJDK\openjdk-11.0.8_10\bin -->
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
       <version>8.4.1.jre11</version>
     </dependency>
-    <!-- microsoft.sqlserver/mssql-jdbc_auth
-    Copy mssql-jdbc_auth-8.4.1.x64.dll to  C:\Program Files\AdoptOpenJDK\jdk8u265-b01\jre\bin
-    or to C:\Program Files\AdoptOpenJDK\openjdk-11.0.8_10\bin -->
 
-    <!-- logging -->
+    <!-- to work with org.apache.camel.core.osgi.OsgiDefaultCamelContext -->
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <scope>runtime</scope>
-      <version>${log4j2-version}</version>
+      <groupId>org.apache.camel.karaf</groupId>
+      <artifactId>camel-core-osgi</artifactId>
+      <version>3.4.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.core</artifactId>
+      <version>4.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.cmpn</artifactId>
+      <version>4.3.1</version>
     </dependency>
 
     <!-- testing -->
@@ -78,8 +87,17 @@
       <artifactId>camel-test</artifactId>
       <scope>test</scope>
     </dependency>
+	
+    <!-- logging -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>runtime</scope>
+      <version>${log4j2-version}</version>
+    </dependency>
+
   </dependencies>
-  
+
   <profiles>
     <!-- to produce messages to Kafka run `mvn compile exec:java -P producer` -->
     <profile>
@@ -152,6 +170,77 @@
           <mainClass>ld.lab.camel.kafka.producer.WordGenApp</mainClass>
         </configuration>
       </plugin>
+
+      <!-- Default configuration suffices for declarative services approach (TBC). -->
+      <!--
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>5.1.1</version>
+      </plugin>
+      -->
+
+      <!-- bundle:bundle - create an OSGi bundle from Maven project. (life-cycle goal) -->
+      <!-- bundle:manifest - generate OSGi MANIFEST.MF for the project -->
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>5.1.1</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <!-- If you want a dependency inlined instead of embedded add the inline=true. -->
+            <Embed-Dependency>mssql-jdbc;scope=!test;inline=false</Embed-Dependency>
+            <!-- adds the groupId as a subdirectory (ie. groupId/artifactId-version.jar) -->
+            <Embed-StripGroup>true</Embed-StripGroup>
+            <!-- adds a subdirectory (ie. directory/artifactId-version.jar -->
+            <Embed-Directory>dependency</Embed-Directory>
+            <!-- Normally the plugin only checks direct dependencies,
+            but this can be changed to include the complete set of transitive dependencies-->
+            <Embed-Transitive>true</Embed-Transitive>
+            <Export-Package>!*</Export-Package>
+            <!-- By default, plugin scans for deep dependencies irrespective of Embed-Transitive;
+            this brings in used packages that you cannot satisfy.  -->
+            <Import-Package>
+              org.apache.camel.*,javax.*,
+              <!-- required by declarative services/OsgiDefaultCamelContext -->
+              org.osgi.service.component,org.osgi.framework
+            </Import-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+
+      <!--
+      arrange for any embedded dependencies to appear in a local directory that matches the Bundle-ClassPath entries
+      -->
+      <!--
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      -->
+
+      <!-- include MANIFEST.MF into the JAR -->
+      <!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+      -->
 
     </plugins>
   </build>
