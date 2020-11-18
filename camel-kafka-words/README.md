@@ -91,7 +91,7 @@ Package application into an OSGi bundle.
 From the Karaf console, add the Karaf features required by the project.
  
     karaf@root()> feature:repo-add camel 3.4.4
-    karaf@root()> feature:install scr camel camel-sql camel-kafka
+    karaf@root()> feature:install scr camel-blueprint camel-sql camel-kafka
 
 Copy camel-kafka-words-1.0-SNAPSHOT.jar OSGI bundle to apache-karaf-4.2.10\deploy folder. (For this example I'm using Karaf 4.2.10. )
 
